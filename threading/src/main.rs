@@ -1,11 +1,15 @@
 extern crate native;
 
 use std::comm;
+use std::io::Timer;
 use std::io::timer;
 use std::time::duration::Duration;
 
 fn main() {
     let (tx, rx): (Sender<uint>, Receiver<uint>) = comm::channel();
+    let mut timer = Timer::new().unwrap();
+    let interval = Duration::milliseconds(500);
+    let tictoc: Receiver<()> = timer.periodic(interval);
 
     for ii in range(0u, 10) {
         let interval = Duration::milliseconds(ii as i64 * 20i64);
@@ -18,7 +22,12 @@ fn main() {
         });
     }
 
-    for _ in range(0u, 10) {
+    for ii in std::iter::range_step(10i, 0, -1) {
+        tictoc.recv();
+        println!("{}", ii);
         println!("Recieved {}", rx.recv());
     }
+
+    println!("go!");
+
 }
