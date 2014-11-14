@@ -8,11 +8,11 @@ fn main () {
     let mut acceptor = listener.listen().unwrap();
     
     fn handle_client(mut stream: BufferedStream<TcpStream>) {
-        stream.write(b"HTTP/1.1 200 OK\n"); // byte literal
-        stream.write(b"Content-length: 15\n"); // byte literal
-        stream.write(b"Content-type: text/html\n"); // byte literal
-        stream.write(b"\n\n <p>Howdy!</p>");
-        //stream.flush();
+        stream.write(b"HTTP/1.1 200 OK\n").unwrap(); // byte literal
+        stream.write(b"Content-length: 15\n").unwrap(); // byte literal
+        stream.write(b"Content-type: text/html\n").unwrap(); // byte literal
+        stream.write(b"\n\n <p>Howdy!</p>").unwrap();
+        stream.flush().unwrap();
 
         println!("Handling acceptor");
     }
@@ -20,8 +20,8 @@ fn main () {
     for stream in acceptor.incoming() {
         match stream {
             Err(e) => { println!("connection failed: {}", e) }
-            Ok(mut stream) => spawn(proc() {
-                let mut bs = BufferedStream::new(stream);
+            Ok(stream) => spawn(proc() {
+                let bs = BufferedStream::new(stream);
                 handle_client(bs)
             })
         }
