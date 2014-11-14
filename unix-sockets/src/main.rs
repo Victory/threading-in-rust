@@ -1,6 +1,7 @@
 use std::io::{TcpListener, TcpStream};
 use std::io::{Acceptor, Listener};
 use std::io::BufferedStream;
+use std::string::String;
 
 fn main () {
 
@@ -8,10 +9,14 @@ fn main () {
     let mut acceptor = listener.listen().unwrap();
     
     fn handle_client(mut stream: BufferedStream<TcpStream>) {
+        let s = String::from_str("X-header: from bytes\n");
+
+
         stream.write(b"HTTP/1.1 200 OK\n").unwrap(); // byte literal
-        stream.write(b"Content-length: 15\n").unwrap(); // byte literal
+        stream.write(b"Content-length: 21\n").unwrap(); // byte literal
         stream.write(b"Content-type: text/html\n").unwrap(); // byte literal
-        stream.write(b"\n\n <p>Howdy!</p>").unwrap();
+        stream.write(s.into_bytes().as_slice());
+        stream.write(b"\n\n <p>Howdy There!</p>").unwrap();
         stream.flush().unwrap();
 
         println!("Handling acceptor");
