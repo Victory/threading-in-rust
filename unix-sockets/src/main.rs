@@ -9,14 +9,15 @@ fn main () {
     let mut acceptor = listener.listen().unwrap();
     
     fn handle_client(mut stream: BufferedStream<TcpStream>) {
-        let s = String::from_str("X-header: from bytes\n");
-
+        let body = String::from_str("<p>Hi, World!</p>");
+        let body_length = format!("Content-length: {}", body.len());
 
         stream.write(b"HTTP/1.1 200 OK\n").unwrap(); // byte literal
-        stream.write(b"Content-length: 21\n").unwrap(); // byte literal
-        stream.write(b"Content-type: text/html\n").unwrap(); // byte literal
-        stream.write(s.into_bytes().as_slice());
-        stream.write(b"\n\n <p>Howdy There!</p>").unwrap();
+        stream.write(b"Content-type: text/html\n").unwrap();
+        stream.write(b"X-header: from bytes\n");
+        stream.write(body_length.into_bytes().as_slice()).unwrap(); 
+        stream.write(b"\n\n").unwrap();
+        stream.write(body.into_bytes().as_slice()).unwrap();
         stream.flush().unwrap();
 
         println!("Handling acceptor");
