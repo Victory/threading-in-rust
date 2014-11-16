@@ -28,7 +28,7 @@ fn main () {
 
         stream.write(b"HTTP/1.1 200 OK\n").unwrap(); // byte literal
         stream.write(b"Content-type: text/html\n").unwrap();
-        stream.write(b"X-header: from bytes\n");
+        stream.write(b"X-header: from bytes\n").unwrap();
         stream.write(body_length.into_bytes().as_slice()).unwrap(); 
         stream.write(b"\n\n").unwrap();
         stream.write(body.into_bytes().as_slice()).unwrap();
