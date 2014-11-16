@@ -10,8 +10,19 @@ fn main () {
     
     fn handle_client(mut stream: BufferedStream<TcpStream>) {
 
-        let mut body: String = stream.read_line().unwrap();
-        body = body + "<p>You sent it!</p>";
+        let mut body: String = "<p>You sent it!</p>".to_string();
+
+        let mut cur_line: String;
+        loop {
+            match stream.read_line() { // XXX: strange unwrap like thing
+                Ok(line) => cur_line = line,
+                Err(_) => break
+            }
+            body = body + cur_line + "<br>";
+            if cur_line.len() == 2 { // TODO: make this check for \n\n explicitly
+                break;
+            }
+        }
 
         let body_length = format!("Content-length: {}", body.len());
 
