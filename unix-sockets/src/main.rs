@@ -9,7 +9,10 @@ fn main () {
     let mut acceptor = listener.listen().unwrap();
     
     fn handle_client(mut stream: BufferedStream<TcpStream>) {
-        let body = String::from_str("<p>Hi, World!</p>");
+
+        let mut body: String = stream.read_line().unwrap();
+        body = body + "<p>You sent it!</p>";
+
         let body_length = format!("Content-length: {}", body.len());
 
         stream.write(b"HTTP/1.1 200 OK\n").unwrap(); // byte literal
