@@ -3,7 +3,8 @@ use std::io::{Acceptor, Listener};
 use std::io::BufferedStream;
 use std::string::String;
 
-fn parse_first_header(header: &str) {
+
+fn parse_request_line(header: &str) {
     let mut pathname = String::new();
     let mut method = String::new();
     let mut starting = true;
@@ -48,8 +49,8 @@ fn main () {
                 Ok(line) => cur_line = line,
                 Err(_) => break
             }
-            if ii == 0u {
-                parse_first_header(cur_line.as_slice());
+            if ii == 0u { // the Request-Line is always the first line
+                parse_request_line(cur_line.as_slice());
                 ii += 1;
             }
 
