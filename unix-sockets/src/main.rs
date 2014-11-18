@@ -3,6 +3,34 @@ use std::io::{Acceptor, Listener};
 use std::io::BufferedStream;
 use std::string::String;
 
+fn parse_first_header(header: &str) {
+    let mut pathname = String::new();
+    let mut method = String::new();
+    let mut starting = true;
+    let mut found_method = false;
+
+    for ch in header.graphemes(true) {
+        if starting && ch != " " {
+            method.push_str(ch);
+        } 
+        if starting && ch == " " {
+            starting = false;
+            found_method = true;
+            continue;
+        }
+        if found_method && ch != " " {
+            pathname.push_str(ch);
+        }
+        if found_method && ch == " " {
+            break;
+        }
+
+    }
+
+    println!("METHOD: {}", method);
+    println!("PATHNAME: {}", pathname);
+}
+
 fn main () {
 
     let listener = TcpListener::bind("127.0.0.1", 8099).unwrap();
@@ -13,11 +41,18 @@ fn main () {
         let mut body: String = "<p>You sent it!</p>".to_string();
 
         let mut cur_line: String;
+        let mut ii = 0u;
+
         loop {
             match stream.read_line() { // XXX: strange unwrap like thing
                 Ok(line) => cur_line = line,
                 Err(_) => break
             }
+            if ii == 0u {
+                parse_first_header(cur_line.as_slice());
+                ii += 1;
+            }
+
             body = body + cur_line + "<br>";
             if cur_line.len() == 2 { // TODO: make this check for \n\n explicitly
                 break;
