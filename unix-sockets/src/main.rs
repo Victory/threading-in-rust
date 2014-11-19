@@ -68,11 +68,11 @@ fn main () {
 
         let body_length = format!("Content-length: {}", body.len());
 
-        stream.write(b"HTTP/1.1 200 OK\n").unwrap(); // byte literal
-        stream.write(b"Content-type: text/html\n").unwrap();
-        stream.write(b"X-header: from bytes\n").unwrap();
+        stream.write(b"HTTP/1.1 200 OK\r\n").unwrap(); // byte literal
+        stream.write(b"Content-type: text/html\r\n").unwrap();
+        stream.write(b"X-header: from bytes\r\n").unwrap();
         stream.write(body_length.into_bytes().as_slice()).unwrap(); 
-        stream.write(b"\n\n").unwrap();
+        stream.write(b"\r\n\r\n").unwrap();
         stream.write(body.into_bytes().as_slice()).unwrap();
         stream.flush().unwrap();
 
