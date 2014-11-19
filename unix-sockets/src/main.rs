@@ -3,6 +3,10 @@ use std::io::{Acceptor, Listener};
 use std::io::BufferedStream;
 use std::string::String;
 
+pub const CR: u8 = b'\r';
+pub const LF: u8 = b'\n';
+pub const SP: u8 = b' ';
+pub const CRLF: [u8, ..2] = [CR,LF];
 
 fn parse_request_line(header: &str) {
     let mut pathname = String::new();
@@ -11,18 +15,20 @@ fn parse_request_line(header: &str) {
     let mut found_method = false;
 
     for ch in header.graphemes(true) {
-        if starting && ch != " " {
+        let cbyte = ch.as_bytes()[0];
+
+        if starting && cbyte != SP {
             method.push_str(ch);
         } 
-        if starting && ch == " " {
+        if starting && cbyte == SP {
             starting = false;
             found_method = true;
             continue;
         }
-        if found_method && ch != " " {
+        if found_method && cbyte != SP {
             pathname.push_str(ch);
         }
-        if found_method && ch == " " {
+        if found_method && cbyte == SP {
             break;
         }
 
@@ -34,7 +40,7 @@ fn parse_request_line(header: &str) {
 
 fn main () {
 
-    let listener = TcpListener::bind("127.0.0.1", 8099).unwrap();
+    let listener = TcpListener::bind("127.0.0.1:8099").unwrap();
     let mut acceptor = listener.listen().unwrap();
     
     fn handle_client(mut stream: BufferedStream<TcpStream>) {
@@ -55,7 +61,7 @@ fn main () {
             }
 
             body = body + cur_line + "<br>";
-            if cur_line.len() == 2 { // TODO: make this check for \n\n explicitly
+            if cur_line.as_bytes() == CRLF { // TODO: make this check for \r\n explicitly
                 break;
             }
         }
