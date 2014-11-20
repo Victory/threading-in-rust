@@ -61,7 +61,7 @@ fn main () {
             }
 
             body = body + cur_line + "<br>";
-            if cur_line.as_bytes() == CRLF { // TODO: make this check for \r\n explicitly
+            if cur_line.as_bytes() == CRLF {
                 break;
             }
         }
