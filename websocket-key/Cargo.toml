@@ -3,3 +3,7 @@
 name = "websocket-key"
 version = "0.0.1"
 authors = ["Victory"]
+
+
+[dependencies.rust-crypto]
+git = "https://github.com/DaGenix/rust-crypto"
