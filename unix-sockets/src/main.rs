@@ -8,7 +8,12 @@ pub const LF: u8 = b'\n';
 pub const SP: u8 = b' ';
 pub const CRLF: [u8, ..2] = [CR,LF];
 
-fn parse_request_line(header: &str) {
+struct RequestedRoute {
+    method: String,
+    pathname: String
+}
+
+fn parse_request_line(header: &str) -> RequestedRoute {
     let mut pathname = String::new();
     let mut method = String::new();
     let mut starting = true;
@@ -34,8 +39,9 @@ fn parse_request_line(header: &str) {
 
     }
 
-    println!("METHOD: {}", method);
-    println!("PATHNAME: {}", pathname);
+
+
+    return RequestedRoute {method: method, pathname: pathname};
 }
 
 fn main () {
@@ -49,6 +55,10 @@ fn main () {
 
         let mut cur_line: String;
         let mut ii = 0u;
+        let mut req: RequestedRoute = RequestedRoute{
+            pathname: String::new(), 
+            method: String::new()
+        };
 
         loop {
             match stream.read_line() { // XXX: strange unwrap like thing
@@ -56,15 +66,16 @@ fn main () {
                 Err(_) => break
             }
             if ii == 0u { // the Request-Line is always the first line
-                parse_request_line(cur_line.as_slice());
+                req = parse_request_line(cur_line.as_slice());
                 ii += 1;
             }
 
             body = body + cur_line + "<br>";
-            if cur_line.as_bytes() == CRLF {
+            if cur_line.as_bytes() == &CRLF {
                 break;
             }
         }
+        println!("pathname {} method {}", req.pathname, req.method);
 
         let body_length = format!("Content-length: {}", body.len());
 
