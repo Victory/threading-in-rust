@@ -6,7 +6,7 @@ use std::string::String;
 pub const CR: u8 = b'\r';
 pub const LF: u8 = b'\n';
 pub const SP: u8 = b' ';
-pub const CRLF: [u8, ..2] = [CR,LF];
+pub const CRLF: &'static [u8] = &[CR,LF];
 
 struct RequestedRoute {
     method: String,
@@ -71,7 +71,7 @@ fn main () {
             }
 
             body = body + cur_line + "<br>";
-            if cur_line.as_bytes() == &CRLF {
+            if cur_line.as_bytes() == CRLF {
                 break;
             }
         }
