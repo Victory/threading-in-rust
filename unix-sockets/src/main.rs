@@ -1,6 +1,6 @@
 use std::io::{TcpListener, TcpStream};
 use std::io::{Acceptor, Listener};
-use std::io::BufferedStream;
+use std::io::{File, BufferedStream};
 use std::string::String;
 
 pub const CR: u8 = b'\r';
@@ -38,11 +38,23 @@ fn parse_request_line(header: &str) -> RequestedRoute {
         }
 
     }
-
-
-
     return RequestedRoute {method: method, pathname: pathname};
 }
+
+fn get_index_body () -> String {
+    let path = Path::new("../html/ws1.html");
+    let display = path.display();
+    let mut file = match File::open(&path) {
+        Ok(f) => f,
+        Err(err) => panic!("file error: {}", err)
+    };
+
+    let content = file.read_to_end(); // this is Result
+    println!("{} {}", display, content);
+
+    return String::new();
+}
+
 
 fn main () {
 
@@ -76,6 +88,8 @@ fn main () {
             }
         }
         println!("pathname {} method {}", req.pathname, req.method);
+        get_index_body();
+
 
         let body_length = format!("Content-length: {}", body.len());
 
