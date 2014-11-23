@@ -49,10 +49,13 @@ fn get_index_body () -> String {
         Err(err) => panic!("file error: {}", err)
     };
 
-    let content = file.read_to_end(); // this is Result
-    println!("{} {}", display, content);
+    let content = match file.read_to_end() {
+        Ok(c) => c,
+        Err(err) => panic!("{}", err)
+    };
 
-    return String::new();
+    let s = String::from_utf8(content).unwrap();
+    return s;
 }
 
 
@@ -88,7 +91,7 @@ fn main () {
             }
         }
         println!("pathname {} method {}", req.pathname, req.method);
-        get_index_body();
+        body = get_index_body();
 
 
         let body_length = format!("Content-length: {}", body.len());
