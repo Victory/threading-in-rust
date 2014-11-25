@@ -106,11 +106,17 @@ fn main () {
                 break;
             }
         }
+
         println!("pathname {} method {}", req.pathname, req.method);
+        let mut secHandshake = false;
+
         if req.pathname.as_bytes() == b"/" {
             body = get_index_body();
         } else if req.pathname.as_bytes() == b"/ws1.js" {
             body = get_js_body();
+        } else if req.pathname.as_bytes() == b"/ws" {
+            secHandshake = true;
+            // TODO get handshake
         }
 
 
