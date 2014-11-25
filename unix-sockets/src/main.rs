@@ -58,6 +58,22 @@ fn get_index_body () -> String {
     return s;
 }
 
+fn get_js_body () -> String {
+    let path = Path::new("../html/ws1.js");
+    let display = path.display();
+    let mut file = match File::open(&path) {
+        Ok(f) => f,
+        Err(err) => panic!("file error: {}", err)
+    };
+
+    let content = match file.read_to_end() {
+        Ok(c) => c,
+        Err(err) => panic!("{}", err)
+    };
+
+    let s = String::from_utf8(content).unwrap();
+    return s;
+}
 
 fn main () {
 
@@ -91,7 +107,12 @@ fn main () {
             }
         }
         println!("pathname {} method {}", req.pathname, req.method);
-        body = get_index_body();
+        if req.pathname.as_bytes() == b"/" {
+            body = get_index_body();
+        } else if req.pathname.as_bytes() == b"/ws1.js" {
+            body = get_js_body();
+        }
+
 
 
         let body_length = format!("Content-length: {}", body.len());
