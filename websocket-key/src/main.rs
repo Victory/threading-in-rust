@@ -5,8 +5,9 @@ use rust_crypto::sha1::Sha1;
 use rust_crypto::digest::Digest;
 use serialize::base64::{ToBase64, STANDARD};
 
-fn main () {
-    let from_server = b"dGhlIHNhbXBsZSBub25jZQ==";
+
+fn sec_handshake (from_server: &[u8]) -> String {
+
     let guid = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
     let mut sha = Sha1::new();
@@ -17,4 +18,12 @@ fn main () {
     sha.result(out.as_mut_slice());
 
     println!("{} {}", sha.result_str(), out.to_base64(STANDARD));
+
+    return out.to_base64(STANDARD);
+}
+
+
+fn main () {
+    let from_server = b"dGhlIHNhbXBsZSBub25jZQ==";
+    sec_handshake(from_server);
 }
