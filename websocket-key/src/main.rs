@@ -27,3 +27,14 @@ fn main () {
     let from_server = b"dGhlIHNhbXBsZSBub25jZQ==";
     sec_handshake(from_server);
 }
+
+
+#[test]
+fn rfc_example() {
+    let expected = b"s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
+    let from_server = b"dGhlIHNhbXBsZSBub25jZQ==";
+
+    let actual = sec_handshake(from_server);
+
+    assert_eq!(expected, actual.as_bytes());    
+}
