@@ -1,7 +1,15 @@
+extern crate "rust-crypto" as rust_crypto;
+extern crate serialize;
+
 use std::io::{TcpListener, TcpStream};
 use std::io::{Acceptor, Listener};
 use std::io::{File, BufferedStream};
 use std::string::String;
+
+use rust_crypto::sha1::Sha1;
+use rust_crypto::digest::Digest;
+use serialize::base64::{ToBase64, STANDARD};
+
 
 pub const CR: u8 = b'\r';
 pub const LF: u8 = b'\n';
@@ -41,8 +49,8 @@ fn parse_request_line(header: &str) -> RequestedRoute {
     return RequestedRoute {method: method, pathname: pathname};
 }
 
-fn get_index_body () -> String {
-    let path = Path::new("../html/ws1.html");
+fn get_normal_body (path_on_disk: &str) -> String {
+    let path = Path::new(path_on_disk);
     let display = path.display();
     let mut file = match File::open(&path) {
         Ok(f) => f,
@@ -74,6 +82,24 @@ fn get_js_body () -> String {
     let s = String::from_utf8(content).unwrap();
     return s;
 }
+
+
+fn sec_handshake (from_server: &[u8]) -> String {
+
+    let guid = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+    let mut sha = Sha1::new();
+
+    sha.input(from_server);
+    sha.input(guid);
+    let mut out = [0u8, ..20];
+    sha.result(out.as_mut_slice());
+
+    println!("{} {}", sha.result_str(), out.to_base64(STANDARD));
+
+    return out.to_base64(STANDARD);
+}
+
 
 fn main () {
 
@@ -111,7 +137,7 @@ fn main () {
         let mut secHandshake = false;
 
         if req.pathname.as_bytes() == b"/" {
-            body = get_index_body();
+            body = get_normal_body("../html/ws1.html");
         } else if req.pathname.as_bytes() == b"/ws1.js" {
             body = get_js_body();
         } else if req.pathname.as_bytes() == b"/ws" {
