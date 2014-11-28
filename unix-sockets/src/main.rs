@@ -30,11 +30,31 @@ struct ClientHeader {
 }
 
 
+enum Payload {
+    Text(String)
+}
+
+enum Opcode {
+    Text = 0x1
+}
+
+
+struct Message {
+    payload: Payload,
+    opcode: Opcode
+}
+
+impl Message {
+    fn from_str (msg: &[u8]) {
+
+    }
+}
+
 fn get_header_by_name (header: &[u8], headers: Vec<ClientHeader>) -> String {
     let mut result = String::new();
 
     for h in headers.into_iter() {
-        if (h.key.as_bytes() == header) {
+        if h.key.as_bytes() == header {
             // XXX: maybe we shouldn't own headers and should .clone() here
             result = h.value;
             break;
@@ -76,7 +96,6 @@ fn parse_request_line (header: &str) -> RequestedRoute {
 
 
 fn parse_normal_header (header: &str) -> ClientHeader {
-    let header_name = b"Sec-WebSocket-Key";
     let mut lhs = String::new(); // lhs of ':' in header
     let mut rhs = String::new(); // rhs of ':' in header
     let mut found_colon = false;
@@ -147,19 +166,39 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
                  headers: Vec<ClientHeader>) {
     println!("running ws_handshake");
 
-    let mut header_sec_key = b"Sec-WebSocket-Key";
+    let header_sec_key = b"Sec-WebSocket-Key";
 
     let from_server = get_header_by_name(header_sec_key, headers);
     let accept = sec_handshake(from_server.as_bytes());
 
     let sec_header = format!("Sec-WebSocket-Accept: {}\r\n", accept);
 
-
     stream.write(b"HTTP/1.1 101 Switching Protocols\r\n").unwrap();
     stream.write(b"Upgrade: websocket\r\n").unwrap();
     stream.write(b"Connection: Upgrade\r\n").unwrap();
+    stream.write(b"Sec-WebSocket-Version: 13\r\n").unwrap();
+    stream.write(b"Sec-WebSocket-Protocol: protocolOne\r\n").unwrap();
     stream.write(sec_header.as_bytes().as_slice()).unwrap();
+    //stream.write(b"\r\n\r\n");
+
+    //stream.flush().unwrap();
+
+    let msg: &[u8] = &[0x81, 0x01, 0x48];
+    stream.write_u8(0b1000_0001).unwrap();
+    stream.write_u8(0b0000_1000).unwrap();
+    stream.write(b"h");
+
+    /*
+    stream.write_u8(0x81).unwrap();
+    stream.write_u8(0x05).unwrap();
+    stream.write_u8(0x48).unwrap();
+    stream.write_u8(0x65).unwrap();
+    stream.write_u8(0x6c).unwrap();
+    stream.write_u8(0x6c).unwrap();
+    stream.write_u8(0x6f).unwrap();
+
     stream.flush().unwrap();
+    */
 }
 
 
