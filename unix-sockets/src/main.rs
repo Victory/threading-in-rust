@@ -179,13 +179,13 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
     stream.write(b"Sec-WebSocket-Version: 13\r\n").unwrap();
     stream.write(b"Sec-WebSocket-Protocol: protocolOne\r\n").unwrap();
     stream.write(sec_header.as_bytes().as_slice()).unwrap();
-    //stream.write(b"\r\n\r\n");
+    stream.write(b"\r\n");
 
     //stream.flush().unwrap();
 
     let msg: &[u8] = &[0x81, 0x01, 0x48];
     stream.write_u8(0b1000_0001).unwrap();
-    stream.write_u8(0b0000_1000).unwrap();
+    stream.write_u8(0b0000_0001).unwrap();
     stream.write(b"h");
 
     /*
