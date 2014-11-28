@@ -35,6 +35,7 @@ fn get_header_by_name (header: &[u8], headers: Vec<ClientHeader>) -> String {
 
     for h in headers.into_iter() {
         if (h.key.as_bytes() == header) {
+            // XXX: maybe we shouldn't own headers and should .clone() here
             result = h.value;
             break;
         }
@@ -100,7 +101,10 @@ fn parse_normal_header (header: &str) -> ClientHeader {
 
     println!("key: {}, value: {}", lhs.trim(), rhs.trim());
 
-    return ClientHeader{key:lhs, value:rhs};
+    return ClientHeader {
+        key:lhs.trim().to_string(),
+        value:rhs.trim().to_string()
+    };
 }
 
 
@@ -139,13 +143,22 @@ fn sec_handshake (from_server: &[u8]) -> String {
 }
 
 
-fn ws_handshake (mut stream: BufferedStream<TcpStream>) {
+fn ws_handshake (mut stream: BufferedStream<TcpStream>,
+                 headers: Vec<ClientHeader>) {
     println!("running ws_handshake");
+
+    let mut header_sec_key = b"Sec-WebSocket-Key";
+
+    let from_server = get_header_by_name(header_sec_key, headers);
+    let accept = sec_handshake(from_server.as_bytes());
+
+    let sec_header = format!("Sec-WebSocket-Accept: {}\r\n", accept);
+
+
     stream.write(b"HTTP/1.1 101 Switching Protocols\r\n").unwrap();
     stream.write(b"Upgrade: websocket\r\n").unwrap();
     stream.write(b"Connection: Upgrade\r\n").unwrap();
-    stream.write(
-        b"Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n").unwrap();
+    stream.write(sec_header.as_bytes().as_slice()).unwrap();
     stream.flush().unwrap();
 }
 
@@ -167,7 +180,7 @@ fn main () {
             pathname: String::new(),
             method: String::new()
         };
-        let mut header_sec_key = b"Sec-WebSocket-Key";
+
 
         let mut headers: Vec<ClientHeader> = Vec::new();
         loop {
@@ -199,12 +212,9 @@ fn main () {
         } else if req.pathname.as_bytes() == b"/ws1.js" {
             body = get_normal_body("../html/ws1.js");
         } else if req.pathname.as_bytes() == b"/ws" {
-            println!("ws {}", get_header_by_name(header_sec_key, headers));
-            ws_handshake(stream);
+            ws_handshake(stream, headers);
             return;
         }
-
-
 
         let body_length = format!("Content-length: {}", body.len());
 
