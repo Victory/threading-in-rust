@@ -14,14 +14,37 @@ use serialize::base64::{ToBase64, STANDARD};
 pub const CR: u8 = b'\r';
 pub const LF: u8 = b'\n';
 pub const SP: u8 = b' ';
+pub const COLON: u8 = b':';
 pub const CRLF: &'static [u8] = &[CR,LF];
+
 
 struct RequestedRoute {
     method: String,
     pathname: String
 }
 
-fn parse_request_line(header: &str) -> RequestedRoute {
+
+struct ClientHeader {
+    key: String,
+    value: String
+}
+
+
+fn get_header_by_name (header: &[u8], headers: Vec<ClientHeader>) -> String {
+    let mut result = String::new();
+
+    for h in headers.into_iter() {
+        if (h.key.as_bytes() == header) {
+            result = h.value;
+            break;
+        }
+    }
+
+    return result;
+}
+
+
+fn parse_request_line (header: &str) -> RequestedRoute {
     let mut pathname = String::new();
     let mut method = String::new();
     let mut starting = true;
@@ -32,7 +55,7 @@ fn parse_request_line(header: &str) -> RequestedRoute {
 
         if starting && cbyte != SP {
             method.push_str(ch);
-        } 
+        }
         if starting && cbyte == SP {
             starting = false;
             found_method = true;
@@ -46,28 +69,43 @@ fn parse_request_line(header: &str) -> RequestedRoute {
         }
 
     }
+
     return RequestedRoute {method: method, pathname: pathname};
 }
 
-fn get_normal_body (path_on_disk: &str) -> String {
-    let path = Path::new(path_on_disk);
-    let display = path.display();
-    let mut file = match File::open(&path) {
-        Ok(f) => f,
-        Err(err) => panic!("file error: {}", err)
-    };
 
-    let content = match file.read_to_end() {
-        Ok(c) => c,
-        Err(err) => panic!("{}", err)
-    };
+fn parse_normal_header (header: &str) -> ClientHeader {
+    let header_name = b"Sec-WebSocket-Key";
+    let mut lhs = String::new(); // lhs of ':' in header
+    let mut rhs = String::new(); // rhs of ':' in header
+    let mut found_colon = false;
 
-    let s = String::from_utf8(content).unwrap();
-    return s;
+    for ch in header.graphemes(true) {
+        let cbyte = ch.as_bytes()[0];
+        if !found_colon && cbyte == COLON {
+            found_colon = true;
+            continue;
+        }
+
+        if cbyte == CR || cbyte == LF {
+            continue;
+        }
+
+        if !found_colon {
+            lhs.push_str(ch);
+        } else {
+            rhs.push_str(ch);
+        }
+    }
+
+    println!("key: {}, value: {}", lhs.trim(), rhs.trim());
+
+    return ClientHeader{key:lhs, value:rhs};
 }
 
-fn get_js_body () -> String {
-    let path = Path::new("../html/ws1.js");
+
+fn get_normal_body (path_on_disk: &str) -> String {
+    let path = Path::new(path_on_disk);
     let display = path.display();
     let mut file = match File::open(&path) {
         Ok(f) => f,
@@ -101,63 +139,84 @@ fn sec_handshake (from_server: &[u8]) -> String {
 }
 
 
+fn ws_handshake (mut stream: BufferedStream<TcpStream>) {
+    println!("running ws_handshake");
+    stream.write(b"HTTP/1.1 101 Switching Protocols\r\n").unwrap();
+    stream.write(b"Upgrade: websocket\r\n").unwrap();
+    stream.write(b"Connection: Upgrade\r\n").unwrap();
+    stream.write(
+        b"Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n").unwrap();
+    stream.flush().unwrap();
+}
+
+
 fn main () {
 
-    let listener = TcpListener::bind("127.0.0.1:8099").unwrap();
-    let mut acceptor = listener.listen().unwrap();
-    
-    fn handle_client(mut stream: BufferedStream<TcpStream>) {
+    let addr = "127.0.0.1:8099";
 
+    let listener = TcpListener::bind(addr).unwrap();
+    let mut acceptor = listener.listen().unwrap();
+    println!("Listening on {}", addr);
+
+    fn handle_client(mut stream: BufferedStream<TcpStream>) {
         let mut body: String = "<p>You sent it!</p>".to_string();
 
         let mut cur_line: String;
         let mut ii = 0u;
-        let mut req: RequestedRoute = RequestedRoute{
-            pathname: String::new(), 
+        let mut req: RequestedRoute = RequestedRoute {
+            pathname: String::new(),
             method: String::new()
         };
+        let mut header_sec_key = b"Sec-WebSocket-Key";
 
+        let mut headers: Vec<ClientHeader> = Vec::new();
         loop {
             match stream.read_line() { // XXX: strange unwrap like thing
                 Ok(line) => cur_line = line,
                 Err(_) => break
             }
-            if ii == 0u { // the Request-Line is always the first line
-                req = parse_request_line(cur_line.as_slice());
-                ii += 1;
-            }
 
+            println!("{}", cur_line);
             body = body + cur_line + "<br>";
             if cur_line.as_bytes() == CRLF {
                 break;
             }
+
+            if ii == 0u { // the Request-Line is always the first line
+                req = parse_request_line(cur_line.as_slice());
+                println!("{}", req.pathname);
+                ii += 1;
+            } else { // this should be  "normal" key-value type header
+                headers.push(parse_normal_header(cur_line.as_slice()));
+            }
+
         }
 
         println!("pathname {} method {}", req.pathname, req.method);
-        let mut secHandshake = false;
 
         if req.pathname.as_bytes() == b"/" {
             body = get_normal_body("../html/ws1.html");
         } else if req.pathname.as_bytes() == b"/ws1.js" {
-            body = get_js_body();
+            body = get_normal_body("../html/ws1.js");
         } else if req.pathname.as_bytes() == b"/ws" {
-            secHandshake = true;
-            // TODO get handshake
+            println!("ws {}", get_header_by_name(header_sec_key, headers));
+            ws_handshake(stream);
+            return;
         }
 
 
 
         let body_length = format!("Content-length: {}", body.len());
 
-        stream.write(b"HTTP/1.1 200 OK\r\n").unwrap(); // byte literal
+        stream.write(b"HTTP/1.1 200 OK\r\n").unwrap();
         stream.write(b"Content-type: text/html\r\n").unwrap();
         stream.write(b"X-header: from bytes\r\n").unwrap();
-        stream.write(body_length.into_bytes().as_slice()).unwrap(); 
+        stream.write(body_length.into_bytes().as_slice()).unwrap();
         stream.write(b"\r\n\r\n").unwrap();
         stream.write(body.into_bytes().as_slice()).unwrap();
         stream.flush().unwrap();
 
-        println!("Handling acceptor");
+        println!("Done handling acceptor");
     }
 
     for stream in acceptor.incoming() {
