@@ -181,24 +181,9 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
     stream.write(sec_header.as_bytes().as_slice()).unwrap();
     stream.write(b"\r\n");
 
-    //stream.flush().unwrap();
-
-    let msg: &[u8] = &[0x81, 0x01, 0x48];
-    stream.write_u8(0b1000_0001).unwrap();
+    stream.write_u8(0b1000_0000 | Opcode::Text as u8).unwrap();
     stream.write_u8(0b0000_0001).unwrap();
     stream.write(b"h");
-
-    /*
-    stream.write_u8(0x81).unwrap();
-    stream.write_u8(0x05).unwrap();
-    stream.write_u8(0x48).unwrap();
-    stream.write_u8(0x65).unwrap();
-    stream.write_u8(0x6c).unwrap();
-    stream.write_u8(0x6c).unwrap();
-    stream.write_u8(0x6f).unwrap();
-
-    stream.flush().unwrap();
-    */
 }
 
 
