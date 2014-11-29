@@ -50,13 +50,13 @@ impl Message {
     }
 }
 
-fn get_header_by_name (header: &[u8], headers: Vec<ClientHeader>) -> String {
+fn get_header_by_name (header: &[u8], headers: &Vec<ClientHeader>) -> String {
     let mut result = String::new();
 
-    for h in headers.into_iter() {
+    for h in headers.iter() {
         if h.key.as_bytes() == header {
             // XXX: maybe we shouldn't own headers and should .clone() here
-            result = h.value;
+            result = h.value.clone();
             break;
         }
     }
@@ -168,7 +168,7 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 
     let header_sec_key = b"Sec-WebSocket-Key";
 
-    let from_server = get_header_by_name(header_sec_key, headers);
+    let from_server = get_header_by_name(header_sec_key, &headers);
     let accept = sec_handshake(from_server.as_bytes());
 
     let sec_header = format!("Sec-WebSocket-Accept: {}\r\n", accept);
@@ -181,10 +181,17 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
     stream.write(sec_header.as_bytes().as_slice()).unwrap();
     stream.write(b"\r\n");
 
+    ws_listen(stream, headers);
+}
+
+
+fn ws_listen(mut stream: BufferedStream<TcpStream>,
+             headers: Vec<ClientHeader>) {
     stream.write_u8(0b1000_0000 | Opcode::Text as u8).unwrap();
     stream.write_u8(0b0000_0001).unwrap();
     stream.write(b"h");
 }
+
 
 
 fn main () {
