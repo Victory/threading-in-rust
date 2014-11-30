@@ -5,6 +5,7 @@ use std::io::{TcpListener, TcpStream};
 use std::io::{Acceptor, Listener};
 use std::io::{File, BufferedStream};
 use std::string::String;
+use std::os;
 
 use rust_crypto::sha1::Sha1;
 use rust_crypto::digest::Digest;
@@ -187,14 +188,19 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 
 fn ws_listen(mut stream: BufferedStream<TcpStream>,
              headers: Vec<ClientHeader>) {
+
+    let msg = b"hello world";
     stream.write_u8(0b1000_0000 | Opcode::Text as u8).unwrap();
-    stream.write_u8(0b0000_0001).unwrap();
-    stream.write(b"h");
+    stream.write_u8(msg.len() as u8).unwrap();
+    stream.write(msg);
 }
 
 
-
 fn main () {
+
+    for argument in os::args().iter() {
+        println!("arg: {}", argument);
+    }
 
     let addr = "127.0.0.1:8099";
 
