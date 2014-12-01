@@ -119,8 +119,6 @@ fn parse_normal_header (header: &str) -> ClientHeader {
         }
     }
 
-    println!("key: {}, value: {}", lhs.trim(), rhs.trim());
-
     return ClientHeader {
         key:lhs.trim().to_string(),
         value:rhs.trim().to_string()
@@ -157,15 +155,12 @@ fn sec_handshake (from_server: &[u8]) -> String {
     let mut out = [0u8, ..20];
     sha.result(out.as_mut_slice());
 
-    println!("{} {}", sha.result_str(), out.to_base64(STANDARD));
-
     return out.to_base64(STANDARD);
 }
 
 
 fn ws_handshake (mut stream: BufferedStream<TcpStream>,
                  headers: Vec<ClientHeader>) {
-    println!("running ws_handshake");
 
     let header_sec_key = b"Sec-WebSocket-Key";
 
@@ -226,7 +221,6 @@ fn main () {
                 Err(_) => break
             }
 
-            println!("{}", cur_line);
             body = body + cur_line + "<br>";
             if cur_line.as_bytes() == CRLF {
                 break;
