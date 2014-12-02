@@ -41,13 +41,19 @@ enum Opcode {
 
 
 struct Message {
-    payload: Payload,
-    opcode: Opcode
+    pub payload: Payload,
+    pub opcode: Opcode,
+    pub length: u8
 }
 
 impl Message {
-    fn from_str (msg: &[u8]) {
-
+    fn new (msg: &[u8]) -> Message {
+        let payload = match msg.to_string() {
+            String => Payload::Text(msg.to_string())
+        };
+        Message {payload: payload,
+                 opcode: Opcode::Text,
+                 length: msg.len() as u8}
     }
 }
 
@@ -184,10 +190,10 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 fn ws_listen(mut stream: BufferedStream<TcpStream>,
              headers: Vec<ClientHeader>) {
 
-    let msg = b"hello world";
+    let msg = Message::new(b"hello world");
     stream.write_u8(0b1000_0000 | Opcode::Text as u8).unwrap();
-    stream.write_u8(msg.len() as u8).unwrap();
-    stream.write(msg);
+    stream.write_u8(msg.length).unwrap();
+    stream.write(b"hello world");
 }
 
 
