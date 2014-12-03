@@ -41,19 +41,23 @@ enum Opcode {
 
 
 struct Message {
-    pub payload: Payload,
-    pub opcode: Opcode,
-    pub length: u8
-}
+    payload: Payload,
+ }
 
 impl Message {
-    fn new (msg: &[u8]) -> Message {
-        let payload = match msg.to_string() {
+    fn send (msg: &[u8],
+             mut stream: BufferedStream<TcpStream>,
+             headers: Vec<ClientHeader>) {
+        let payload = match msg {
             String => Payload::Text(msg.to_string())
         };
-        Message {payload: payload,
-                 opcode: Opcode::Text,
-                 length: msg.len() as u8}
+        let payload = payload;
+        let opcode = Opcode::Text;
+        let length = msg.len() as u8;
+
+        stream.write_u8(0b1000_0000 | opcode as u8).unwrap();
+        stream.write_u8(length).unwrap();
+        stream.write(msg).unwrap();
     }
 }
 
@@ -62,7 +66,6 @@ fn get_header_by_name (header: &[u8], headers: &Vec<ClientHeader>) -> String {
 
     for h in headers.iter() {
         if h.key.as_bytes() == header {
-            // XXX: maybe we shouldn't own headers and should .clone() here
             result = h.value.clone();
             break;
         }
@@ -189,11 +192,7 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 
 fn ws_listen(mut stream: BufferedStream<TcpStream>,
              headers: Vec<ClientHeader>) {
-
-    let msg = Message::new(b"hello world");
-    stream.write_u8(0b1000_0000 | Opcode::Text as u8).unwrap();
-    stream.write_u8(msg.length).unwrap();
-    stream.write(b"hello world");
+    let msg = Message::send(b"hello world", stream, headers);
 }
 
 
