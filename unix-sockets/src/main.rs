@@ -198,13 +198,15 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     let string_msg = "this is a message".to_string();
     let opcode = Opcode::TextOp;
     let payload: Payload = match opcode {
-        String => Payload::Text(string_msg)
+        Opcode::TextOp => Payload::Text(string_msg),
     };
 
     let msg2 = box Message {
         payload: payload,
         opcode: opcode
     };
+
+    //msg2.send(stream, headers);
 }
 
 
