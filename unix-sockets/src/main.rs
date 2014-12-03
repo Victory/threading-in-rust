@@ -36,12 +36,13 @@ enum Payload {
 }
 
 enum Opcode {
-    Text = 0x1
+    TextOp = 0x1
 }
 
 
 struct Message {
     payload: Payload,
+    opcode: Opcode
  }
 
 impl Message {
@@ -52,7 +53,7 @@ impl Message {
             String => Payload::Text(msg.to_string())
         };
         let payload = payload;
-        let opcode = Opcode::Text;
+        let opcode = Opcode::TextOp;
         let length = msg.len() as u8;
 
         stream.write_u8(0b1000_0000 | opcode as u8).unwrap();
@@ -193,6 +194,17 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 fn ws_listen(mut stream: BufferedStream<TcpStream>,
              headers: Vec<ClientHeader>) {
     let msg = Message::send(b"hello world", stream, headers);
+
+    let string_msg = "this is a message".to_string();
+    let opcode = Opcode::TextOp;
+    let payload: Payload = match opcode {
+        String => Payload::Text(string_msg)
+    };
+
+    let msg2 = box Message {
+        payload: payload,
+        opcode: opcode
+    };
 }
 
 
