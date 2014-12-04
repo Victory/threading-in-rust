@@ -60,6 +60,24 @@ impl Message {
         stream.write_u8(length).unwrap();
         stream.write(msg).unwrap();
     }
+
+    fn snd (self,
+            mut stream: BufferedStream<TcpStream>,
+            headers: Vec<ClientHeader>) {
+
+        let msg = match self.payload {
+            Payload::Text(s) => s
+        };
+
+        let length = msg.len() as u8;
+
+        println!("msg: {}, opcode: {}", msg, self.opcode as u8);
+
+        stream.write_u8(0b1000_0000 | self.opcode as u8).unwrap();
+        stream.write_u8(length).unwrap();
+        stream.write(msg.into_bytes().as_slice()).unwrap();
+
+    }
 }
 
 fn get_header_by_name (header: &[u8], headers: &Vec<ClientHeader>) -> String {
@@ -193,7 +211,7 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 
 fn ws_listen(mut stream: BufferedStream<TcpStream>,
              headers: Vec<ClientHeader>) {
-    let msg = Message::send(b"hello world", stream, headers);
+    //let msg = Message::send(b"hello world", stream, headers);
 
     let string_msg = "this is a message".to_string();
     let opcode = Opcode::TextOp;
@@ -206,7 +224,7 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
         opcode: opcode
     };
 
-    //msg2.send(stream, headers);
+    msg2.snd(stream, headers);
 }
 
 
