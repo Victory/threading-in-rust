@@ -66,7 +66,7 @@ impl Message {
             headers: Vec<ClientHeader>) {
 
         let msg = match self.payload {
-            Payload::Text(s) => s
+            Payload::Text(ref s) => s.as_bytes()
         };
 
         let length = msg.len() as u8;
@@ -75,7 +75,7 @@ impl Message {
 
         stream.write_u8(0b1000_0000 | self.opcode as u8).unwrap();
         stream.write_u8(length).unwrap();
-        stream.write(msg.into_bytes().as_slice()).unwrap();
+        stream.write(msg).unwrap();
 
     }
 }
