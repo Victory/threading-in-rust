@@ -49,11 +49,9 @@ impl Message {
     fn send (msg: &[u8],
              mut stream: BufferedStream<TcpStream>,
              headers: Vec<ClientHeader>) {
-        let payload = match msg {
-            String => Payload::Text(msg.to_string())
+        let (payload, opcode) = match msg {
+            String => (Payload::Text(msg.to_string()), Opcode::TextOp)
         };
-        let payload = payload;
-        let opcode = Opcode::TextOp;
         let length = msg.len() as u8;
 
         stream.write_u8(0b1000_0000 | opcode as u8).unwrap();
