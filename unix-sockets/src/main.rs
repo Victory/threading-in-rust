@@ -59,6 +59,15 @@ impl Message {
         stream.write(msg).unwrap();
     }
 
+    fn new (msg: &String) -> Message {
+
+        let (payload, opcode) = match msg {
+            String => (Payload::Text(msg.to_string()), Opcode::TextOp)
+        };
+
+        return Message{payload: payload, opcode: opcode};
+    }
+
     fn snd (self,
             mut stream: BufferedStream<TcpStream>,
             headers: Vec<ClientHeader>) {
@@ -209,20 +218,10 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 
 fn ws_listen(mut stream: BufferedStream<TcpStream>,
              headers: Vec<ClientHeader>) {
-    //let msg = Message::send(b"hello world", stream, headers);
-
     let string_msg = "this is a message".to_string();
-    let opcode = Opcode::TextOp;
-    let payload: Payload = match opcode {
-        Opcode::TextOp => Payload::Text(string_msg),
-    };
 
-    let msg2 = box Message {
-        payload: payload,
-        opcode: opcode
-    };
-
-    msg2.snd(stream, headers);
+    let msg = box Message::new(&string_msg);
+    msg.snd(stream, headers);
 }
 
 
