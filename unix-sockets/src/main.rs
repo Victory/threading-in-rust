@@ -32,11 +32,14 @@ struct ClientHeader {
 
 
 enum Payload {
-    Text(String)
+    Text(String),
+    Empty
 }
 
+
 enum Opcode {
-    TextOp = 0x1
+    TextOp = 0x1,
+    BinaryOp = 0x2
 }
 
 
@@ -46,18 +49,6 @@ struct Message {
  }
 
 impl Message {
-    fn send (msg: &[u8],
-             mut stream: BufferedStream<TcpStream>,
-             headers: Vec<ClientHeader>) {
-        let (payload, opcode) = match msg {
-            String => (Payload::Text(msg.to_string()), Opcode::TextOp)
-        };
-        let length = msg.len() as u8;
-
-        stream.write_u8(0b1000_0000 | opcode as u8).unwrap();
-        stream.write_u8(length).unwrap();
-        stream.write(msg).unwrap();
-    }
 
     fn new (msg: &String) -> Message {
 
@@ -68,12 +59,13 @@ impl Message {
         return Message{payload: payload, opcode: opcode};
     }
 
-    fn snd (self,
+    fn send (self,
             mut stream: BufferedStream<TcpStream>,
             headers: Vec<ClientHeader>) {
 
         let msg = match self.payload {
-            Payload::Text(ref s) => s.as_bytes()
+            Payload::Text(ref s) => s.as_bytes(),
+            Payload::Empty => unimplemented!()
         };
 
         let length = msg.len() as u8;
@@ -219,9 +211,8 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 fn ws_listen(mut stream: BufferedStream<TcpStream>,
              headers: Vec<ClientHeader>) {
     let string_msg = "this is a message".to_string();
-
     let msg = box Message::new(&string_msg);
-    msg.snd(stream, headers);
+    msg.send(stream, headers);
 }
 
 
