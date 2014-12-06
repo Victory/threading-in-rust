@@ -200,7 +200,7 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
     stream.write(b"Connection: Upgrade\r\n").unwrap();
     stream.write(b"Sec-WebSocket-Version: 13\r\n").unwrap();
     stream.write(b"Sec-WebSocket-Protocol: protocolOne\r\n").unwrap();
-    stream.write(sec_header.as_bytes().as_slice()).unwrap();
+    stream.write(sec_header.as_bytes()).unwrap();
     stream.write(b"\r\n");
 
     ws_listen(stream, headers);
