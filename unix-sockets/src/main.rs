@@ -48,6 +48,7 @@ struct Message {
     opcode: Opcode
  }
 
+
 impl Message {
 
     fn new (msg: &String) -> Message {
@@ -173,6 +174,7 @@ fn get_normal_body (path_on_disk: &str) -> String {
 
 fn sec_handshake (from_server: &[u8]) -> String {
 
+    // from rfc6455 [page 6]
     let guid = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
     let mut sha = Sha1::new();
