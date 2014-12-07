@@ -33,6 +33,7 @@ struct ClientHeader {
 
 enum Payload {
     Text(String),
+    Binary(Vec<u8>),
     Empty
 }
 
@@ -54,11 +55,17 @@ impl Message {
     fn new (msg: &String) -> Message {
 
         let (payload, opcode) = match msg {
-            String => (Payload::Text(msg.to_string()), Opcode::TextOp)
+            String => (Payload::Text(msg.to_string()), Opcode::TextOp),
         };
 
         return Message{payload: payload, opcode: opcode};
     }
+
+
+    fn from_payload (msg: Payload) -> Message {
+        return Message::new(&"silly".to_string());
+    }
+
 
     fn send (self,
             mut stream: BufferedStream<TcpStream>,
@@ -66,6 +73,7 @@ impl Message {
 
         let msg = match self.payload {
             Payload::Text(ref s) => s.as_bytes(),
+            Payload::Binary(ref s) => unimplemented!(),
             Payload::Empty => unimplemented!()
         };
 
@@ -215,6 +223,9 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     let string_msg = "this is a message".to_string();
     let msg = box Message::new(&string_msg);
     msg.send(stream, headers);
+
+    let mut bin = Vec::new();
+    bin.push('a' as u8);
 }
 
 
