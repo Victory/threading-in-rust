@@ -62,18 +62,22 @@ impl Message {
     }
 
 
-    fn from_payload (msg: Payload) -> Message {
-        return Message::new(&"silly".to_string());
+    fn from_payload (payload: Payload) -> Message {
+        let opcode: Opcode = match payload {
+            Payload::Text(_) => Opcode::TextOp,
+            Payload::Binary(_) => Opcode::BinaryOp,
+            _ => panic!("unsupported payload")
+        };
+        return Message {payload: payload, opcode: opcode};
     }
 
 
     fn send (self,
             mut stream: BufferedStream<TcpStream>,
             headers: Vec<ClientHeader>) {
-
         let msg = match self.payload {
             Payload::Text(ref s) => s.as_bytes(),
-            Payload::Binary(ref s) => unimplemented!(),
+            Payload::Binary(ref s) => s.as_slice(),
             Payload::Empty => unimplemented!()
         };
 
@@ -220,12 +224,18 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 
 fn ws_listen(mut stream: BufferedStream<TcpStream>,
              headers: Vec<ClientHeader>) {
+
+    /*
     let string_msg = "this is a message".to_string();
     let msg = box Message::new(&string_msg);
     msg.send(stream, headers);
+    */
 
     let mut bin = Vec::new();
     bin.push('a' as u8);
+    let payload = Payload::Binary(bin);
+    let msg = Message::from_payload(payload);
+    msg.send(stream, headers);
 }
 
 

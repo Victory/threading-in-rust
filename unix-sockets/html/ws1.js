@@ -13,5 +13,16 @@ ws.onclose = function (evt) {
 
 
 ws.onmessage = function (evt) {
-    console.log("msg", evt);
+    console.log("msg", evt, typeof evt.data);
+
+    if (evt.data instanceof Blob) {
+	console.log("Thats a blob!");
+	var reader = new window.FileReader();
+	reader.readAsDataURL(evt.data); 
+	reader.onloadend = function() {
+            base64data = reader.result;                
+            console.log(base64data);
+	}
+	
+    }
 };
