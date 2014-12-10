@@ -52,16 +52,6 @@ struct Message {
 
 impl Message {
 
-    fn new (msg: &String) -> Message {
-
-        let (payload, opcode) = match msg {
-            String => (Payload::Text(msg.to_string()), Opcode::TextOp),
-        };
-
-        return Message{payload: payload, opcode: opcode};
-    }
-
-
     fn from_payload (payload: Payload) -> Message {
         let opcode: Opcode = match payload {
             Payload::Text(_) => Opcode::TextOp,
@@ -71,10 +61,9 @@ impl Message {
         return Message {payload: payload, opcode: opcode};
     }
 
-
-    fn send (self,
-            mut stream: BufferedStream<TcpStream>,
-            headers: Vec<ClientHeader>) {
+    fn send (&self,
+            mut stream: &mut BufferedStream<TcpStream>,
+            mut headers: &mut Vec<ClientHeader>) {
         let msg = match self.payload {
             Payload::Text(ref s) => s.as_bytes(),
             Payload::Binary(ref s) => s.as_slice(),
@@ -88,7 +77,6 @@ impl Message {
         stream.write_u8(0b1000_0000 | self.opcode as u8).unwrap();
         stream.write_u8(length).unwrap();
         stream.write(msg).unwrap();
-
     }
 }
 
@@ -223,7 +211,7 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 
 
 fn ws_listen(mut stream: BufferedStream<TcpStream>,
-             headers: Vec<ClientHeader>) {
+             mut headers: Vec<ClientHeader>) {
 
     /*
     let string_msg = "this is a message".to_string();
@@ -233,9 +221,13 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
 
     let mut bin = Vec::new();
     bin.push('a' as u8);
-    let payload = Payload::Binary(bin);
+
+    let payload = Payload::Text("text here".to_string());
     let msg = Message::from_payload(payload);
-    msg.send(stream, headers);
+    msg.send(&mut stream, &mut headers);
+    let mut stream2 = stream;
+
+    msg.send(&mut stream2, &mut headers);
 }
 
 
