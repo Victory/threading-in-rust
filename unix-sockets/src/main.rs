@@ -62,8 +62,7 @@ impl Message {
     }
 
     fn send (&self,
-            mut stream: &mut BufferedStream<TcpStream>,
-            mut headers: &mut Vec<ClientHeader>) {
+            mut stream: &mut BufferedStream<TcpStream>) {
         let msg = match self.payload {
             Payload::Text(ref s) => s.as_bytes(),
             Payload::Binary(ref s) => s.as_slice(),
@@ -224,10 +223,9 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
 
     let payload = Payload::Text("text here".to_string());
     let msg = Message::from_payload(payload);
-    msg.send(&mut stream, &mut headers);
+    msg.send(&mut stream);
     let mut stream2 = stream;
-
-    msg.send(&mut stream2, &mut headers);
+    msg.send(&mut stream2);
 }
 
 
