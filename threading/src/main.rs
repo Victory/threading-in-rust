@@ -22,9 +22,9 @@ fn main() {
     for ii in range(0u, 10) {
         let interval = Duration::milliseconds(ii as i64 * 20i64);
         let task_tx = tx.clone(); // clone the Sender
-
         spawn(proc() {
-            subtx(ii, interval, task_tx);
+            subtx(ii, interval, task_tx.clone());
+            subtx(ii, interval, task_tx.clone());
         });
     }
 
