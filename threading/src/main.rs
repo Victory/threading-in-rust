@@ -1,9 +1,17 @@
-extern crate native;
+//extern crate native;
 
 use std::comm;
 use std::io::Timer;
 use std::io::timer;
 use std::time::duration::Duration;
+
+
+fn subtx(ii: uint, interval: Duration, task_tx: Sender<uint>) {
+    task_tx.send(ii);
+    timer::sleep(interval);
+    println!("task {} is done", ii);
+}
+
 
 fn main() {
     let (tx, rx): (Sender<uint>, Receiver<uint>) = comm::channel();
@@ -16,9 +24,7 @@ fn main() {
         let task_tx = tx.clone(); // clone the Sender
 
         spawn(proc() {
-            task_tx.send(ii);
-            timer::sleep(interval);
-            println!("task {} is done", ii);
+            subtx(ii, interval, task_tx);
         });
     }
 
@@ -29,5 +35,4 @@ fn main() {
     }
 
     println!("go!");
-
 }
