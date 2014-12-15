@@ -39,6 +39,7 @@ enum Payload {
 
 
 enum Opcode {
+    EmptyOp = 0x0,
     TextOp = 0x1,
     BinaryOp = 0x2
 }
@@ -46,19 +47,26 @@ enum Opcode {
 
 struct Message {
     payload: Payload,
-    opcode: Opcode
+    opcode: Opcode,
+    fin: u8
  }
 
 
 impl Message {
 
-    fn from_payload (payload: Payload) -> Message {
+    fn from_payload (payload: Payload, fin: u8) -> Message {
         let opcode: Opcode = match payload {
             Payload::Text(_) => Opcode::TextOp,
             Payload::Binary(_) => Opcode::BinaryOp,
-            _ => panic!("unsupported payload")
+            Payload::Empty => Opcode::EmptyOp
         };
-        return Message {payload: payload, opcode: opcode};
+        return Message {payload: payload, opcode: opcode, fin: fin};
+    }
+
+    fn continue_from_payload (payload: Payload, fin: u8) -> Message {
+        let opcode = Opcode::EmptyOp;
+        let fin = 0x0;
+        return Message {payload: payload, opcode: opcode, fin: fin};
     }
 
     fn send (&self,
@@ -66,14 +74,14 @@ impl Message {
         let msg = match self.payload {
             Payload::Text(ref s) => s.as_bytes(),
             Payload::Binary(ref s) => s.as_slice(),
-            Payload::Empty => unimplemented!()
+            Payload::Empty => "".as_bytes(),
         };
 
         let length = msg.len() as u8;
 
-        println!("msg: {}, opcode: {}", msg, self.opcode as u8);
+        println!("fin: {}, msg: {}, opcode: {}", self.fin, msg, self.opcode as u8);
 
-        stream.write_u8(0b1000_0000 | self.opcode as u8).unwrap();
+        stream.write_u8(self.fin | self.opcode as u8).unwrap();
         stream.write_u8(length).unwrap();
         stream.write(msg).unwrap();
     }
@@ -221,11 +229,19 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     let mut bin = Vec::new();
     bin.push('a' as u8);
 
-    let payload = Payload::Text("text here".to_string());
-    let msg = Message::from_payload(payload);
+    let payload = Payload::Text("text ".to_string());
+    let msg = Message::from_payload(payload, 0b0000_0000);
     msg.send(&mut stream);
+
+    let payload = Payload::Text("here".to_string());
+    let msg = Message::continue_from_payload(payload, 0b0000_0000);
     let mut stream2 = stream;
     msg.send(&mut stream2);
+
+    let payload = Payload::Empty;
+    let msg = Message::from_payload(payload, 0b1000_0000);
+    let mut stream3 = stream2;
+    msg.send(&mut stream3);
 }
 
 
@@ -277,9 +293,9 @@ fn main () {
         println!("pathname {} method {}", req.pathname, req.method);
 
         if req.pathname.as_bytes() == b"/" {
-            body = get_normal_body("../html/ws1.html");
+            body = get_normal_body("./html/ws1.html");
         } else if req.pathname.as_bytes() == b"/ws1.js" {
-            body = get_normal_body("../html/ws1.js");
+            body = get_normal_body("./html/ws1.js");
         } else if req.pathname.as_bytes() == b"/ws" {
             ws_handshake(stream, headers);
             return;
