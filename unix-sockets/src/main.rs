@@ -41,7 +41,8 @@ enum Payload {
 enum Opcode {
     EmptyOp = 0x0,
     TextOp = 0x1,
-    BinaryOp = 0x2
+    BinaryOp = 0x2,
+    CloseOp = 0x8,
 }
 
 
@@ -63,7 +64,7 @@ impl Message {
         return Message {payload: payload, opcode: opcode, fin: fin};
     }
 
-    fn continue_from_payload (payload: Payload, fin: u8) -> Message {
+    fn continue_from_payload (payload: Payload) -> Message {
         let opcode = Opcode::EmptyOp;
         let fin = 0x0;
         return Message {payload: payload, opcode: opcode, fin: fin};
@@ -234,7 +235,7 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     msg.send(&mut stream);
 
     let payload = Payload::Text("here".to_string());
-    let msg = Message::continue_from_payload(payload, 0b0000_0000);
+    let msg = Message::continue_from_payload(payload);
     let mut stream2 = stream;
     msg.send(&mut stream2);
 
