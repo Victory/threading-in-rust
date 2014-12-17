@@ -6,6 +6,7 @@ use std::io::{Acceptor, Listener};
 use std::io::{File, BufferedStream};
 use std::string::String;
 use std::os;
+use std::vec::Vec;
 
 use rust_crypto::sha1::Sha1;
 use rust_crypto::digest::Digest;
@@ -89,6 +90,17 @@ impl Message {
         stream.write_u8(length).unwrap();
         stream.write(msg).unwrap();
         stream.flush();
+    }
+
+    fn from_buffer (buf: &[u8]) {
+        let fin = buf[0] & 0b1000_0000;
+        let rsv = buf.slice(1, 4);
+
+        println!("fin {}, rsv {}, buf {}", fin, rsv, buf.as_slice());
+    }
+
+    fn continue_from_buffer(buf: &[u8]) {
+
     }
 }
 
@@ -242,13 +254,10 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     msg.send(&mut stream3);
     
 
-
     let mut timer = Timer::new().unwrap();
     let interval = Duration::milliseconds(5000);
     timer::sleep(interval);
     
-
-
     let mut stream4 = stream3;
     let mut buf = [0, ..100];
     match stream4.read(&mut buf) {
@@ -256,7 +265,7 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
         Err(e) => println!("error reading: {}", e)
     }
 
-    println!("buf {}", buf.as_slice());
+    Message::from_buffer(&buf);
     
 }
 
