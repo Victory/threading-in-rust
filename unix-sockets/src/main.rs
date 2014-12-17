@@ -11,6 +11,9 @@ use rust_crypto::sha1::Sha1;
 use rust_crypto::digest::Digest;
 use serialize::base64::{ToBase64, STANDARD};
 
+use std::io::Timer;
+use std::io::timer;
+use std::time::duration::Duration;
 
 pub const CR: u8 = b'\r';
 pub const LF: u8 = b'\n';
@@ -85,6 +88,7 @@ impl Message {
         stream.write_u8(self.fin | self.opcode as u8).unwrap();
         stream.write_u8(length).unwrap();
         stream.write(msg).unwrap();
+        stream.flush();
     }
 }
 
@@ -155,6 +159,7 @@ fn parse_normal_header (header: &str) -> ClientHeader {
         }
     }
 
+
     return ClientHeader {
         key:lhs.trim().to_string(),
         value:rhs.trim().to_string()
@@ -221,6 +226,7 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 fn ws_listen(mut stream: BufferedStream<TcpStream>,
              mut headers: Vec<ClientHeader>) {
 
+
     let payload = Payload::Text("text ".to_string());
     let msg = Message::from_payload(payload, 0b0000_0000);
     msg.send(&mut stream);
@@ -234,6 +240,24 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     let msg = Message::from_payload(payload, 0b1000_0000);
     let mut stream3 = stream2;
     msg.send(&mut stream3);
+    
+
+
+    let mut timer = Timer::new().unwrap();
+    let interval = Duration::milliseconds(5000);
+    timer::sleep(interval);
+    
+
+
+    let mut stream4 = stream3;
+    let mut buf = [0, ..100];
+    match stream4.read(&mut buf) {
+        Ok(nread) => println!("Read {} bytes", nread),
+        Err(e) => println!("error reading: {}", e)
+    }
+
+    println!("buf {}", buf.as_slice());
+    
 }
 
 

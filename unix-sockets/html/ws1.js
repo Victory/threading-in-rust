@@ -26,3 +26,8 @@ ws.onmessage = function (evt) {
 	
     }
 };
+
+setTimeout(function () {
+    console.log("sending message");
+    ws.send("an excellent client message");
+}, 200);
