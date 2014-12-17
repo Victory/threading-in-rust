@@ -221,15 +221,6 @@ fn ws_handshake (mut stream: BufferedStream<TcpStream>,
 fn ws_listen(mut stream: BufferedStream<TcpStream>,
              mut headers: Vec<ClientHeader>) {
 
-    /*
-    let string_msg = "this is a message".to_string();
-    let msg = box Message::new(&string_msg);
-    msg.send(stream, headers);
-    */
-
-    let mut bin = Vec::new();
-    bin.push('a' as u8);
-
     let payload = Payload::Text("text ".to_string());
     let msg = Message::from_payload(payload, 0b0000_0000);
     msg.send(&mut stream);
