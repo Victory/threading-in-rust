@@ -100,9 +100,11 @@ impl Message {
         let len = buf[1] & 0b0111_1111;
         let mskkey = buf.slice(2, 6);
 
+        let firstchar = mskkey[0] ^ buf[6];
+
         println!(
-            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, \nbuf {}", 
-            fin, rsv, msk, opc, len, mskkey, buf.as_slice());
+            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, firstchar {}, \nbuf {}", 
+            fin, rsv, msk, opc, len, mskkey, firstchar as char,  buf.as_slice());
     }
 
     fn continue_from_buffer(buf: &[u8]) {
