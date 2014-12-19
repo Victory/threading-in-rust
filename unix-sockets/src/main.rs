@@ -94,9 +94,15 @@ impl Message {
 
     fn from_buffer (buf: &[u8]) {
         let fin = buf[0] & 0b1000_0000;
-        let rsv = buf.slice(1, 4);
+        let rsv = buf[0] & 0b0111_0000;
+        let opc = buf[0] & 0b0000_1111;
+        let msk = buf[0] & 0b0000_0001;
+        let len = buf[1] & 0b0111_1111;
+        let mskkey = buf.slice(2, 6);
 
-        println!("fin {}, rsv {}, buf {}", fin, rsv, buf.as_slice());
+        println!(
+            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, \nbuf {}", 
+            fin, rsv, msk, opc, len, mskkey, buf.as_slice());
     }
 
     fn continue_from_buffer(buf: &[u8]) {
