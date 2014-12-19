@@ -101,6 +101,12 @@ impl Message {
         let mskkey = buf.slice(2, 6);
 
         let firstchar = mskkey[0] ^ buf[6];
+        for ii in range(0u, len as uint) {
+            let i = ii % 4;
+            let ch = mskkey[i] ^ buf[6 + ii];
+            println!("ch {}", ch as char);
+        }
+
 
         println!(
             "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, firstchar {}, \nbuf {}", 
