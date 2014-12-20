@@ -97,20 +97,18 @@ impl Message {
         let rsv = buf[0] & 0b0111_0000;
         let opc = buf[0] & 0b0000_1111;
         let msk = buf[0] & 0b0000_0001;
-        let len = buf[1] & 0b0111_1111;
+        let len = (buf[1] & 0b0111_1111) as uint;
         let mskkey = buf.slice(2, 6);
 
-        let firstchar = mskkey[0] ^ buf[6];
-        for ii in range(0u, len as uint) {
-            let i = ii % 4;
-            let ch = mskkey[i] ^ buf[6 + ii];
-            println!("ch {}", ch as char);
+        let mut msg = Vec::new();
+        for ii in range(0u, len) {
+            let ch = mskkey[ii % 4] ^ buf[6 + ii];
+            msg.push(ch);
         }
 
-
         println!(
-            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, firstchar {}, \nbuf {}", 
-            fin, rsv, msk, opc, len, mskkey, firstchar as char,  buf.as_slice());
+            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, msg {}, \nbuf {}", 
+            fin, rsv, msk, opc, len, mskkey, String::from_utf8(msg),  buf.as_slice());
     }
 
     fn continue_from_buffer(buf: &[u8]) {
