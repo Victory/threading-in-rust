@@ -110,10 +110,6 @@ impl Message {
             "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, msg {}, \nbuf {}", 
             fin, rsv, msk, opc, len, mskkey, String::from_utf8(msg),  buf.as_slice());
     }
-
-    fn continue_from_buffer(buf: &[u8]) {
-
-    }
 }
 
 fn get_header_by_name (header: &[u8], headers: &Vec<ClientHeader>) -> String {
