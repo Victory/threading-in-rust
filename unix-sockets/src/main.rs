@@ -303,7 +303,7 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     let mut stream5 = stream4;
     let echo_msg = Message::from_stream(&mut stream5);
 
-    echo_msg.send(&mut stream5);
+    echo_msg.send(&mut stream4);
 
     echo_msg.send(&mut stream5);
 
