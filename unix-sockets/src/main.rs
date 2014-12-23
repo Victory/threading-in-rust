@@ -92,25 +92,6 @@ impl Message {
         stream.flush();
     }
 
-    fn from_buffer (buf: &[u8]) {
-        let fin = buf[0] & 0b1000_0000;
-        let rsv = buf[0] & 0b0111_0000;
-        let opc = buf[0] & 0b0000_1111;
-        let msk = buf[0] & 0b0000_0001;
-        let len = (buf[1] & 0b0111_1111) as uint;
-        let mskkey = buf.slice(2, 6);
-
-        let mut msg = Vec::new();
-        for ii in range(0u, len) {
-            let ch = mskkey[ii % 4] ^ buf[6 + ii];
-            msg.push(ch);
-        }
-
-        println!(
-            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, msg {}, \nbuf {}", 
-            fin, rsv, msk, opc, len, mskkey, String::from_utf8(msg),  buf.as_slice());
-    }
-
     fn from_stream(mut stream: &mut BufferedStream<TcpStream>) -> Message {
         let cur_byte: u8 = stream.read_byte().unwrap();
 
@@ -143,6 +124,25 @@ impl Message {
         
         let payload = Payload::Text(utf8_msg);
         return Message::from_payload(payload, fin);
+    }
+
+    fn from_buffer (buf: &[u8]) {
+        let fin = buf[0] & 0b1000_0000;
+        let rsv = buf[0] & 0b0111_0000;
+        let opc = buf[0] & 0b0000_1111;
+        let msk = buf[0] & 0b0000_0001;
+        let len = (buf[1] & 0b0111_1111) as uint;
+        let mskkey = buf.slice(2, 6);
+
+        let mut msg = Vec::new();
+        for ii in range(0u, len) {
+            let ch = mskkey[ii % 4] ^ buf[6 + ii];
+            msg.push(ch);
+        }
+
+        println!(
+            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, msg {}, \nbuf {}", 
+            fin, rsv, msk, opc, len, mskkey, String::from_utf8(msg),  buf.as_slice());
     }
 }
 
@@ -297,17 +297,13 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
 
     println!("done sending");
 
-    /*
-    let mut timer = Timer::new().unwrap();
-    let interval = Duration::milliseconds(5000);
-    timer::sleep(interval);
-    */
-
     let mut stream4 = stream3;
     Message::from_stream(&mut stream4);
 
     let mut stream5 = stream4;
     let echo_msg = Message::from_stream(&mut stream5);
+
+    echo_msg.send(&mut stream5);
 
     echo_msg.send(&mut stream5);
 
