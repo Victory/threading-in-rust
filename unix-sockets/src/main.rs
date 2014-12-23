@@ -110,6 +110,34 @@ impl Message {
             "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, msg {}, \nbuf {}", 
             fin, rsv, msk, opc, len, mskkey, String::from_utf8(msg),  buf.as_slice());
     }
+
+    fn from_stream(mut stream: BufferedStream<TcpStream>) {
+
+        let cur_byte = stream.read_byte().unwrap();
+        
+        let fin = cur_byte & 0b1000_0000;
+        let rsv = cur_byte & 0b0111_0000;
+        let opc = cur_byte & 0b0000_1111;
+        let msk = cur_byte & 0b0000_0001;
+
+        let cur_byte = stream.read_byte().unwrap();
+        let len = (cur_byte & 0b0111_1111) as uint;
+
+        let mskkey = stream.read_exact(4).unwrap();
+        
+        let mut msg = Vec::new();
+        for ii in range(0u, len) {
+            let cur_byte = stream.read_byte().unwrap();
+            let ch = mskkey[ii % 4] ^ cur_byte;
+            msg.push(ch);
+        }
+
+        println!(
+            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, msg {}", 
+            fin, rsv, msk, opc, len, mskkey, String::from_utf8(msg));
+        
+
+    }
 }
 
 fn get_header_by_name (header: &[u8], headers: &Vec<ClientHeader>) -> String {
@@ -261,11 +289,20 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     let mut stream3 = stream2;
     msg.send(&mut stream3);
     
-
+    /*
     let mut timer = Timer::new().unwrap();
     let interval = Duration::milliseconds(5000);
     timer::sleep(interval);
-    
+    */
+
+    let mut stream4 = stream3;
+    Message::from_stream(stream4);
+   
+    let mut timer = Timer::new().unwrap();
+    let interval = Duration::milliseconds(5000);
+    timer::sleep(interval);
+
+    /*
     let mut stream4 = stream3;
     let mut buf = [0, ..100];
     match stream4.read(&mut buf) {
@@ -274,6 +311,10 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     }
 
     Message::from_buffer(&buf);
+
+     */
+
+    
     
 }
 
