@@ -111,32 +111,38 @@ impl Message {
             fin, rsv, msk, opc, len, mskkey, String::from_utf8(msg),  buf.as_slice());
     }
 
-    fn from_stream(mut stream: &mut BufferedStream<TcpStream>) {
-        println!("read first byte");
+    fn from_stream(mut stream: &mut BufferedStream<TcpStream>) -> Message {
         let cur_byte: u8 = stream.read_byte().unwrap();
-        println!("end read first byte");
+
         let fin = cur_byte & 0b1000_0000;
         let rsv = cur_byte & 0b0111_0000;
         let opc = cur_byte & 0b0000_1111;
         let msk = cur_byte & 0b0000_0001;
 
-        let cur_byte = stream.read_byte().unwrap();
+        let cur_byte: u8 = stream.read_byte().unwrap();
         let len = (cur_byte & 0b0111_1111) as uint;
 
         let mskkey = stream.read_exact(4).unwrap();
         
         let mut msg = Vec::new();
         for ii in range(0u, len) {
-            let cur_byte = stream.read_byte().unwrap();
+            let cur_byte: u8 = stream.read_byte().unwrap();
             let ch = mskkey[ii % 4] ^ cur_byte;
             msg.push(ch);
         }
 
+
+        let utf8_msg = match String::from_utf8(msg) {
+            Ok(m) => m,
+            Err(_) => panic!("I don't know how to ut8 that")
+        };
+
         println!(
             "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, msg {}", 
-            fin, rsv, msk, opc, len, mskkey, String::from_utf8(msg));
+            fin, rsv, msk, opc, len, mskkey, utf8_msg);
         
-
+        let payload = Payload::Text(utf8_msg);
+        return Message::from_payload(payload, fin);
     }
 }
 
@@ -301,7 +307,11 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     Message::from_stream(&mut stream4);
 
     let mut stream5 = stream4;
-    Message::from_stream(&mut stream5);
+    let echo_msg = Message::from_stream(&mut stream5);
+
+    echo_msg.send(&mut stream5);
+
+
 
 
     /*
