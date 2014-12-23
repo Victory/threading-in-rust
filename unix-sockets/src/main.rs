@@ -287,25 +287,21 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
 
     let payload = Payload::Text("here".to_string());
     let msg = Message::continue_from_payload(payload);
-    let mut stream2 = stream;
-    msg.send(&mut stream2);
+    msg.send(&mut stream);
 
     let payload = Payload::Empty;
     let msg = Message::from_payload(payload, 0b1000_0000);
-    let mut stream3 = stream2;
-    msg.send(&mut stream3);
+    msg.send(&mut stream);
 
     println!("done sending");
 
-    let mut stream4 = stream3;
-    Message::from_stream(&mut stream4);
+    Message::from_stream(&mut stream);
 
-    let mut stream5 = stream4;
-    let echo_msg = Message::from_stream(&mut stream5);
+    let echo_msg = Message::from_stream(&mut stream);
 
-    echo_msg.send(&mut stream4);
+    echo_msg.send(&mut stream);
 
-    echo_msg.send(&mut stream5);
+    echo_msg.send(&mut stream); 
 
 
 
