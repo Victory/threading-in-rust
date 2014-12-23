@@ -7,6 +7,11 @@ ws.onopen = function (evt) {
     console.log("open", evt);
 
     ws.send("an excellent client message");
+
+
+    setTimeout(function () {
+	ws.send("stay fresh websocket bag");
+    }, 1000);
 }
 
 ws.onclose = function (evt) {

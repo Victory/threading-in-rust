@@ -111,9 +111,9 @@ impl Message {
             fin, rsv, msk, opc, len, mskkey, String::from_utf8(msg),  buf.as_slice());
     }
 
-    fn from_stream(mut stream: BufferedStream<TcpStream>) {
+    fn from_stream(mut stream: &mut BufferedStream<TcpStream>) {
         println!("read first byte");
-        let cur_byte = stream.read_byte().unwrap();
+        let cur_byte: u8 = stream.read_byte().unwrap();
         println!("end read first byte");
         let fin = cur_byte & 0b1000_0000;
         let rsv = cur_byte & 0b0111_0000;
@@ -298,11 +298,17 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     */
 
     let mut stream4 = stream3;
-    Message::from_stream(stream4);
-   
+    Message::from_stream(&mut stream4);
+
+    let mut stream5 = stream4;
+    Message::from_stream(&mut stream5);
+
+
+    /*
     let mut timer = Timer::new().unwrap();
     let interval = Duration::milliseconds(5000);
     timer::sleep(interval);
+    */
 
     /*
     let mut stream4 = stream3;
