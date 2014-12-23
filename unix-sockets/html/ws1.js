@@ -5,6 +5,8 @@ var ws = new WebSocket("ws://127.0.0.1:8099/ws", "protocolOne");
 
 ws.onopen = function (evt) {
     console.log("open", evt);
+
+    ws.send("an excellent client message");
 }
 
 ws.onclose = function (evt) {
@@ -26,8 +28,3 @@ ws.onmessage = function (evt) {
 	
     }
 };
-
-setTimeout(function () {
-    console.log("sending message");
-    ws.send("an excellent client message");
-}, 1200);

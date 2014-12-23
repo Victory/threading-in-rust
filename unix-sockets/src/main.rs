@@ -112,9 +112,9 @@ impl Message {
     }
 
     fn from_stream(mut stream: BufferedStream<TcpStream>) {
-
+        println!("read first byte");
         let cur_byte = stream.read_byte().unwrap();
-        
+        println!("end read first byte");
         let fin = cur_byte & 0b1000_0000;
         let rsv = cur_byte & 0b0111_0000;
         let opc = cur_byte & 0b0000_1111;
@@ -288,7 +288,9 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     let msg = Message::from_payload(payload, 0b1000_0000);
     let mut stream3 = stream2;
     msg.send(&mut stream3);
-    
+
+    println!("done sending");
+
     /*
     let mut timer = Timer::new().unwrap();
     let interval = Duration::milliseconds(5000);
