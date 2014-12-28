@@ -56,7 +56,6 @@ struct Message {
     fin: u8
  }
 
-
 impl Message {
 
     fn from_payload (payload: Payload, fin: u8) -> Message {
@@ -126,24 +125,6 @@ impl Message {
         return Message::from_payload(payload, fin);
     }
 
-    fn from_buffer (buf: &[u8]) {
-        let fin = buf[0] & 0b1000_0000;
-        let rsv = buf[0] & 0b0111_0000;
-        let opc = buf[0] & 0b0000_1111;
-        let msk = buf[0] & 0b0000_0001;
-        let len = (buf[1] & 0b0111_1111) as uint;
-        let mskkey = buf.slice(2, 6);
-
-        let mut msg = Vec::new();
-        for ii in range(0u, len) {
-            let ch = mskkey[ii % 4] ^ buf[6 + ii];
-            msg.push(ch);
-        }
-
-        println!(
-            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, msg {}, \nbuf {}", 
-            fin, rsv, msk, opc, len, mskkey, String::from_utf8(msg),  buf.as_slice());
-    }
 }
 
 fn get_header_by_name (header: &[u8], headers: &Vec<ClientHeader>) -> String {
@@ -302,29 +283,6 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     echo_msg.send(&mut stream);
 
     echo_msg.send(&mut stream); 
-
-
-
-
-    /*
-    let mut timer = Timer::new().unwrap();
-    let interval = Duration::milliseconds(5000);
-    timer::sleep(interval);
-    */
-
-    /*
-    let mut stream4 = stream3;
-    let mut buf = [0, ..100];
-    match stream4.read(&mut buf) {
-        Ok(nread) => println!("Read {} bytes", nread),
-        Err(e) => println!("error reading: {}", e)
-    }
-
-    Message::from_buffer(&buf);
-
-     */
-
-    
     
 }
 
