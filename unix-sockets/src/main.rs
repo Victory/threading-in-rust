@@ -112,19 +112,36 @@ impl Message {
         }
 
 
+        /*
         let utf8_msg = match String::from_utf8(msg) {
-            Ok(m) => m,
+            Ok(ref m) => m,
             Err(_) => panic!("I don't know how to ut8 that")
         };
+         */
+
+        let opcode: Opcode = match opc {
+            0x0 => Opcode::EmptyOp,
+            0x1 => Opcode::TextOp,
+            0x2 => Opcode::BinaryOp,
+            0x8 => Opcode::CloseOp,
+            _ => panic!("unknown opcode")
+        };
+
+
+        let payload = match opcode {
+            Opcode::TextOp => Payload::Text(String::from_utf8(msg).unwrap()),
+            Opcode::BinaryOp => Payload::Binary(msg),
+            _ => panic!("unknown payload")
+        };
+
 
         println!(
-            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, msg {}", 
-            fin, rsv, msk, opc, len, mskkey, utf8_msg);
-        
-        let payload = Payload::Text(utf8_msg);
+            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}", 
+            fin, rsv, msk, opc, len, mskkey);
+
+
         return Message::from_payload(payload, fin);
     }
-
 }
 
 fn get_header_by_name (header: &[u8], headers: &Vec<ClientHeader>) -> String {
@@ -281,8 +298,14 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     let echo_msg = Message::from_stream(&mut stream);
 
     echo_msg.send(&mut stream);
-
     echo_msg.send(&mut stream); 
+
+    let mut timer = Timer::new().unwrap();
+    let interval = Duration::milliseconds(5000);
+    timer::sleep(interval);
+
+    let echo_msg = Message::from_stream(&mut stream);
+    echo_msg.send(&mut stream);
     
 }
 

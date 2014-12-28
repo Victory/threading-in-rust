@@ -8,10 +8,16 @@ ws.onopen = function (evt) {
 
     ws.send("an excellent client message");
 
-
     setTimeout(function () {
 	ws.send("stay fresh websocket bag");
+
+
+	var ab = new ArrayBuffer(5);
+	var someinfo = new Uint8Array(ab, 0, 5);
+	
+	ws.send(someinfo);
     }, 1000);
+
 }
 
 ws.onclose = function (evt) {
