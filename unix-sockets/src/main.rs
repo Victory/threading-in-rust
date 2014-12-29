@@ -41,7 +41,7 @@ enum Payload {
     Empty
 }
 
-
+#[deriving(FromPrimitive)]
 enum Opcode {
     EmptyOp = 0x0,
     TextOp = 0x1,
@@ -119,14 +119,7 @@ impl Message {
         };
          */
 
-        let opcode: Opcode = match opc {
-            0x0 => Opcode::EmptyOp,
-            0x1 => Opcode::TextOp,
-            0x2 => Opcode::BinaryOp,
-            0x8 => Opcode::CloseOp,
-            _ => panic!("unknown opcode")
-        };
-
+        let opcode: Opcode = FromPrimitive::from_u8(opc).expect("unknown opcode");
 
         let payload = match opcode {
             Opcode::TextOp => Payload::Text(String::from_utf8(msg).unwrap()),
