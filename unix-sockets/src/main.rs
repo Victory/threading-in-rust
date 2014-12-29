@@ -7,6 +7,7 @@ use std::io::{File, BufferedStream};
 use std::string::String;
 use std::os;
 use std::vec::Vec;
+use std::fmt;
 
 use rust_crypto::sha1::Sha1;
 use rust_crypto::digest::Digest;
@@ -55,6 +56,19 @@ struct Message {
     opcode: Opcode,
     fin: u8
  }
+
+impl fmt::Show for Payload {
+    
+
+     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { 
+         let msg = match self {
+             &Payload::Text(ref s) => s.as_bytes(),
+             &Payload::Binary(ref s) => s.as_slice(),
+             &Payload::Empty => "".as_bytes(),
+         };
+         write!(f, "{}", msg)
+     }
+}
 
 impl Message {
 
@@ -129,8 +143,8 @@ impl Message {
 
 
         println!(
-            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}", 
-            fin, rsv, msk, opc, len, mskkey);
+            "fin {}, rsv {}, msk {}, opcode {}, len {}, mskkey {}, payload {}", 
+            fin, rsv, msk, opc, len, mskkey, payload);
 
 
         return Message::from_payload(payload, fin);
