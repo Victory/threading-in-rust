@@ -48,6 +48,8 @@ enum Opcode {
     TextOp = 0x1,
     BinaryOp = 0x2,
     CloseOp = 0x8,
+    PingOp = 0x9,
+    PongOp = 0xA
 }
 
 
@@ -124,14 +126,6 @@ impl Message {
             let ch = mskkey[ii % 4] ^ cur_byte;
             msg.push(ch);
         }
-
-
-        /*
-        let utf8_msg = match String::from_utf8(msg) {
-            Ok(ref m) => m,
-            Err(_) => panic!("I don't know how to ut8 that")
-        };
-         */
 
         let opcode: Opcode = FromPrimitive::from_u8(opc).expect("unknown opcode");
 
@@ -313,7 +307,6 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
 
     let echo_msg = Message::from_stream(&mut stream);
     echo_msg.send(&mut stream);
-    
 }
 
 

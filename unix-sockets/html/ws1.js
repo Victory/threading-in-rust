@@ -12,8 +12,9 @@ ws.onopen = function (evt) {
 	ws.send("stay fresh websocket bag");
 
 
-	var ab = new ArrayBuffer(5);
-	var someinfo = new Uint8Array(ab, 0, 5);
+	// TODO: run this with > 125
+	var ab = new ArrayBuffer(125);
+	var someinfo = new Uint8Array(ab, 0, 125); 
 	
 	ws.send(someinfo);
     }, 1000);
