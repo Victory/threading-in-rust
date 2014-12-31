@@ -97,13 +97,25 @@ impl Message {
             Payload::Empty => "".as_bytes(),
         };
 
-        let length = msg.len() as u8;
+        let length = msg.len() as u64;
+
+        println!("the whole length {}, length {}", msg.len(), length);
 
         println!("send fin: {}, length {}, msg: {}, opcode: {}",
                  self.fin, length, msg, self.opcode as u8);
 
         stream.write_u8(self.fin | self.opcode as u8).unwrap();
-        stream.write_u8(length).unwrap();
+
+        if length < 126 {
+            stream.write_u8(length as u8).unwrap();
+        } else if (length < 65535){
+            stream.write_u8(126u8).unwrap();
+            stream.write_be_u16(length as u16).unwrap();
+        } else {
+            stream.write_u8(127u8).unwrap();
+            stream.write_be_u64(length as u64).unwrap();
+        }
+
         stream.write(msg).unwrap();
         stream.flush();
     }
