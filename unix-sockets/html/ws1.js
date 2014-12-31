@@ -13,8 +13,8 @@ ws.onopen = function (evt) {
 
 
 	// TODO: run this with > 125
-	var ab = new ArrayBuffer(125);
-	var someinfo = new Uint8Array(ab, 0, 125); 
+	var ab = new ArrayBuffer(300);
+	var someinfo = new Uint8Array(ab, 0, 300); 
 	
 	ws.send(someinfo);
     }, 1000);

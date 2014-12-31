@@ -99,7 +99,8 @@ impl Message {
 
         let length = msg.len() as u8;
 
-        println!("fin: {}, msg: {}, opcode: {}", self.fin, msg, self.opcode as u8);
+        println!("send fin: {}, length {}, msg: {}, opcode: {}",
+                 self.fin, length, msg, self.opcode as u8);
 
         stream.write_u8(self.fin | self.opcode as u8).unwrap();
         stream.write_u8(length).unwrap();
@@ -116,14 +117,20 @@ impl Message {
         let msk = cur_byte & 0b0000_0001;
 
         let cur_byte: u8 = stream.read_byte().unwrap();
-        let len = (cur_byte & 0b0111_1111) as uint;
+        let len_indicator = (cur_byte & 0b0111_1111) as uint;
+
+        let len = match len_indicator {
+            126 => stream.read_be_u16().unwrap() as u64,
+            127 => stream.read_be_u64().unwrap() as u64,
+            _ => len_indicator as u64
+        };
 
         let mskkey = stream.read_exact(4).unwrap();
         
         let mut msg = Vec::new();
-        for ii in range(0u, len) {
+        for ii in range(0u64, len) {
             let cur_byte: u8 = stream.read_byte().unwrap();
-            let ch = mskkey[ii % 4] ^ cur_byte;
+            let ch = mskkey[ii as uint % 4] ^ cur_byte;
             msg.push(ch);
         }
 
