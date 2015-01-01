@@ -1,4 +1,4 @@
-extern crate "rust-crypto" as rust_crypto;
+extern crate crypto;
 extern crate serialize;
 
 use std::io::{TcpListener, TcpStream};
@@ -9,8 +9,8 @@ use std::os;
 use std::vec::Vec;
 use std::fmt;
 
-use rust_crypto::sha1::Sha1;
-use rust_crypto::digest::Digest;
+use crypto::sha1::Sha1;
+use crypto::digest::Digest;
 use serialize::base64::{ToBase64, STANDARD};
 
 use std::io::Timer;
@@ -43,6 +43,7 @@ enum Payload {
 }
 
 #[deriving(FromPrimitive)]
+#[deriving(Copy)]
 enum Opcode {
     EmptyOp = 0x0,
     TextOp = 0x1,
@@ -359,7 +360,7 @@ fn main () {
                 Err(_) => break
             }
 
-            body = body + cur_line + "<br>";
+            //body = body + cur_line + "<br>";
             if cur_line.as_bytes() == CRLF {
                 break;
             }
@@ -401,7 +402,7 @@ fn main () {
     for stream in acceptor.incoming() {
         match stream {
             Err(e) => { println!("connection failed: {}", e) }
-            Ok(stream) => spawn(proc() {
+            Ok(stream) => spawn(move || {
                 let bs = BufferedStream::new(stream);
                 handle_client(bs)
             })
