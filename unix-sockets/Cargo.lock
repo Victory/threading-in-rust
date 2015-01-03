@@ -2,7 +2,7 @@
 name = "unix-sockets"
 version = "0.0.1"
 dependencies = [
- "rust-crypto 0.2.6 (git+https://github.com/DaGenix/rust-crypto)",
+ "rust-crypto 0.2.7 (git+https://github.com/DaGenix/rust-crypto)",
 ]
 
 [[package]]
@@ -12,21 +12,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "rust-crypto"
-version = "0.2.6"
-source = "git+https://github.com/DaGenix/rust-crypto#d528f48784e1d827aa3ce6475c7ccc1ad352d3d4"
+version = "0.2.7"
+source = "git+https://github.com/DaGenix/rust-crypto#698f7f979357b12156071f55f85c90d59bbc602d"
 dependencies = [
- "rustc-serialize 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "time 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "rustc-serialize"
-version = "0.1.5"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "time"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "gcc 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
