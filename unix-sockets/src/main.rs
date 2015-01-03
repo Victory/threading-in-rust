@@ -109,7 +109,7 @@ impl Message {
 
         if length < 126 {
             stream.write_u8(length as u8).unwrap();
-        } else if (length < 65535){
+        } else if length < 65535 {
             stream.write_u8(126u8).unwrap();
             stream.write_be_u16(length as u16).unwrap();
         } else {
