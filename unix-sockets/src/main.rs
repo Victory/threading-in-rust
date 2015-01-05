@@ -13,7 +13,6 @@ use crypto::sha1::Sha1;
 use crypto::digest::Digest;
 use serialize::base64::{ToBase64, STANDARD};
 
-use std::io::Timer;
 use std::io::timer;
 use std::time::duration::Duration;
 
@@ -89,6 +88,7 @@ impl Message {
         let fin = 0x0;
         return Message {payload: payload, opcode: opcode, fin: fin};
     }
+
 
     fn send (&self,
             mut stream: &mut BufferedStream<TcpStream>) {
@@ -242,7 +242,6 @@ fn parse_normal_header (header: &str) -> ClientHeader {
 
 fn get_normal_body (path_on_disk: &str) -> String {
     let path = Path::new(path_on_disk);
-    let display = path.display();
     let mut file = match File::open(&path) {
         Ok(f) => f,
         Err(err) => panic!("file error: {}", err)
@@ -321,7 +320,6 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     echo_msg.send(&mut stream);
     echo_msg.send(&mut stream); 
 
-    let mut timer = Timer::new().unwrap();
     let interval = Duration::milliseconds(5000);
     timer::sleep(interval);
 
