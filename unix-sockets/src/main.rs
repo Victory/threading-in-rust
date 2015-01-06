@@ -38,13 +38,15 @@ struct ClientHeader {
 enum Payload {
     Text(String),
     Binary(Vec<u8>),
+    Close,
     Empty
 }
 
 #[deriving(FromPrimitive)]
 #[deriving(Copy)]
+#[deriving(Show)]
 enum Opcode {
-    EmptyOp = 0x0,
+    ContinuationOp = 0x0,
     TextOp = 0x1,
     BinaryOp = 0x2,
     CloseOp = 0x8,
@@ -60,13 +62,12 @@ struct Message {
  }
 
 impl fmt::Show for Payload {
-    
-
      fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { 
          let msg = match self {
              &Payload::Text(ref s) => s.as_bytes(),
              &Payload::Binary(ref s) => s.as_slice(),
              &Payload::Empty => "".as_bytes(),
+             &Payload::Close => "CLOSE".as_bytes(),
          };
          write!(f, "{}", msg)
      }
@@ -78,13 +79,14 @@ impl Message {
         let opcode: Opcode = match payload {
             Payload::Text(_) => Opcode::TextOp,
             Payload::Binary(_) => Opcode::BinaryOp,
-            Payload::Empty => Opcode::EmptyOp
+            Payload::Empty => Opcode::ContinuationOp,
+            Payload::Close => Opcode::CloseOp,
         };
         return Message {payload: payload, opcode: opcode, fin: fin};
     }
 
     fn continue_from_payload (payload: Payload) -> Message {
-        let opcode = Opcode::EmptyOp;
+        let opcode = Opcode::ContinuationOp;
         let fin = 0x0;
         return Message {payload: payload, opcode: opcode, fin: fin};
     }
@@ -96,6 +98,7 @@ impl Message {
             Payload::Text(ref s) => s.as_bytes(),
             Payload::Binary(ref s) => s.as_slice(),
             Payload::Empty => "".as_bytes(),
+            Payload::Close => "".as_bytes(),
         };
 
         let length = msg.len() as u64;
@@ -324,7 +327,24 @@ fn ws_listen(mut stream: BufferedStream<TcpStream>,
     timer::sleep(interval);
 
     let echo_msg = Message::from_stream(&mut stream);
+
+    println!("op {}", echo_msg.opcode);
     echo_msg.send(&mut stream);
+
+    match echo_msg.opcode {
+        Opcode::ContinuationOp => Message::from_stream(&mut stream).send(&mut stream),
+        Opcode::TextOp => (),
+        Opcode::BinaryOp => (),
+        Opcode::CloseOp => (),
+        Opcode::PingOp => (),
+        Opcode::PongOp => (),
+    }
+
+    let payload = Payload::Close;
+    let msg = Message::from_payload(payload, 0b1000_0000);
+    msg.send(&mut stream);
+    
+    
 }
 
 
